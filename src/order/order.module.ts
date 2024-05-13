@@ -22,15 +22,6 @@ import { AuthMiddleware } from 'src/middleware/auth.middleware';
 export class OrderModule implements NestModule{
   configure(consumer: MiddlewareConsumer) {
     consumer
-    .apply((req : Request, res, next) => {
-      console.log(req.method);
-      console.log(req.url);
-      console.log(req.body);
-      next();
-    })
-    .forRoutes(OrderController);
-
-    consumer
     .apply(AuthMiddleware)
     .forRoutes(OrderController);
 

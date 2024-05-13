@@ -9,10 +9,11 @@ import { Customer } from 'src/customer/entities/customer.entity';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
 import { AuthMiddleware } from 'src/middleware/auth.middleware';
 import { CustomerAuthMiddleware } from 'src/middleware/customerAuth.middleware';
+import { Cart } from 'src/cart/entities/cart.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Session]), 
+    TypeOrmModule.forFeature([Session, Cart]), 
     TypeOrmModule.forFeature([Customer]), 
     TypeOrmModule.forFeature([Merchant])
   ],

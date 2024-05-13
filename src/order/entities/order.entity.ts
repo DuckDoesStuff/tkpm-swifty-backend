@@ -1,7 +1,8 @@
+import { Cart } from "src/cart/entities/cart.entity";
 import { Customer } from "src/customer/entities/customer.entity";
 import { Product } from "src/product/entities/product.entity";
 import { Shop } from "src/shop/entities/shop.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
@@ -18,6 +19,9 @@ export class Order {
 	@Column()
 	total: number;
 
+	@ManyToOne(type => Cart, cart => cart.orders)
+	cart: Cart;
+
 	@ManyToOne(type => Product, product => product.id)
 	product: Product;
 
@@ -27,6 +31,6 @@ export class Order {
 	@ManyToOne(type => Shop, shop => shop.nameId)
 	shop: Shop;
 
-	@Column()
+	@CreateDateColumn()
 	createdAt: Date;
 }

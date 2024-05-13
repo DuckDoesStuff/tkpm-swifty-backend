@@ -5,17 +5,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Shop } from './entities/shop.entity';
 import { Repository } from 'typeorm';
 import { Merchant } from 'src/merchant/entities/merchant.entity';
-import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class ShopService {
   constructor(
     @InjectRepository(Shop)
     private shopRepository: Repository<Shop>,
-    @InjectRepository(Merchant)
-    private merchantRepository: Repository<Merchant>,
-    @InjectRepository(Product)
-    private productRepository: Repository<Product>,
   ) {}
 
   async createShop(createShopDto: CreateShopDto, merchant: Merchant) {

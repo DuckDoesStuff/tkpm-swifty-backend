@@ -1,14 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
 import { CartService } from './cart.service';
-import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+import { NewItemCart } from './dto/new-item-cart.dt';
+import { Request } from 'express';
 
 @Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartService.create(createCartDto);
+  addToCart(@Body() newItemCartDto : NewItemCart, @Req() req: Request) {
+    return this.cartService.addToCart(newItemCartDto, req.customer);
+  }
+
+  @Get()
+  getAllItem(@Req() req: Request){
+    return this.cartService.getCart(req.customer);
   }
 }

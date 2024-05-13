@@ -67,10 +67,10 @@ export class CustomerController {
   }
 
   @Patch()
-  update(@Body() updateCustomerDto: UpdateCustomerDto, @Req() req: Request) {
+  async update(@Body() updateCustomerDto: UpdateCustomerDto, @Req() req: Request) {
     try {
-      this.customerService.updateCustomer(updateCustomerDto, req.customerId);
-      return {statusCode: HttpStatus.OK};
+      const customer = await this.customerService.updateCustomer(updateCustomerDto, req.customerId);
+      return {statusCode: HttpStatus.OK, data: customer};
     }catch (error) {
       console.error(error);
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -1,19 +1,20 @@
 import { Customer } from "src/customer/entities/customer.entity";
 import { Order } from "src/order/entities/order.entity";
 import { Product } from "src/product/entities/product.entity";
-import { Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Cart {
 	@PrimaryGeneratedColumn("uuid")
 	id: string;
 
-	@OneToOne(type => Customer, customer => customer.cart)
-	customer: Customer;
-
-	@OneToMany(type => Order, order => order.id)
+	@OneToMany(type => Order, order => order.cart)
 	orders: Order[];
 
-	@Column()
+	@OneToOne(type => Customer, customer => customer.cart)
+	@JoinColumn()
+	customer: Customer;
+
+	@Column({nullable: true, default: 0})
 	productCount: number;
 }

@@ -14,10 +14,11 @@ import { Product } from 'src/product/entities/product.entity';
 import { ProductService } from 'src/product/product.service';
 import { ProductImage } from 'src/productimage/entities/productimage.entity';
 import { Order } from 'src/order/entities/order.entity';
+import { Cart } from 'src/cart/entities/cart.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Shop]),
+    TypeOrmModule.forFeature([Shop, Cart]),
     TypeOrmModule.forFeature([Session]),
     TypeOrmModule.forFeature([Product]),
     TypeOrmModule.forFeature([Customer]),

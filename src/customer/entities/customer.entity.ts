@@ -35,7 +35,7 @@ export class Customer {
 	@Column({nullable:true})
 	photo: string
 
-	@OneToOne(type => Cart, cart => cart.customer)
+	@OneToOne(type => Cart, cart => cart.id)
 	@JoinColumn()
 	cart: Cart
 

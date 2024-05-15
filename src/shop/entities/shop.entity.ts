@@ -1,4 +1,3 @@
-import { Invoice } from "src/invoice/entities/invoice.entity";
 import { Merchant } from "src/merchant/entities/merchant.entity";
 import { Order } from "src/order/entities/order.entity";
 import { Product } from "src/product/entities/product.entity";
@@ -22,6 +21,9 @@ export class Shop {
 	@Column()
 	phone: string;
 
+	@Column({default: 0})
+	revenue: number;
+
 	@Column({nullable: true})
 	logo: string;
 
@@ -39,7 +41,4 @@ export class Shop {
 
 	@OneToMany(() => Order, order => order.shop)
 	orders: Order[];
-
-	@OneToMany(() => Invoice, invoice => invoice.shop)
-	invoices: Invoice[];
 }

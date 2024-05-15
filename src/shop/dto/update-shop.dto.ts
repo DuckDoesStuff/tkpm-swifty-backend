@@ -4,5 +4,5 @@ import { IsString } from 'class-validator';
 
 export class UpdateShopDto extends PartialType(CreateShopDto) {
 	@IsString()
-	logo: string;
+	logo?: string;
 }

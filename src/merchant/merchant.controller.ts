@@ -53,9 +53,9 @@ export class MerchantController {
     }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.merchantService.findOne(id);
+  @Get(':email')
+  findOne(@Param('email') email: string) {
+    return this.merchantService.findOneByEmail(email);
   }
 
   @Delete(':id')

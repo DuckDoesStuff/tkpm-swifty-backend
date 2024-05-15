@@ -13,7 +13,7 @@ export class OrderController {
     return this.orderService.deleteOrder(id, req.customer);
   }
 
-  @Get()
+  @Get('/shop')
   findOrderFromShop(@Query('status') status: string, @Query('shop') shopNameId: string, @Query('limit') limit: string, @Query('offset') offset: string, @Query('orderby') orderby:string, @Req() req: Request){
     try {
       const limitInt = parseInt(limit) || 5;
@@ -25,9 +25,26 @@ export class OrderController {
     }
   }
 
+  @Get()
+  findAll(@Req() req: Request, @Query('status') status: string, @Query('limit') limit: string, @Query('offset') offset: string, @Query('orderby') orderby:string) {
+    const limitInt = parseInt(limit) || 5;
+    const offsetInt = parseInt(offset) || 0;
+    const statusString = status || 'all';
+    return this.orderService.findAll(req.customer, statusString, limitInt, offsetInt, orderby);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.orderService.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Query('shop') shopNameId:string, @Body() updateOrderDto: UpdateOrderDto, @Req() req: Request) {
+    try {
+      return this.orderService.update(id, shopNameId, updateOrderDto, req.merchant, req.customer);
+    } catch(error) {
+      return {statusCode: HttpStatus.INTERNAL_SERVER_ERROR, message: error.message};
+    }
   }
 
 }

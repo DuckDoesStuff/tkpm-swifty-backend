@@ -10,6 +10,8 @@ import { Order } from 'src/order/entities/order.entity';
 import { Product } from 'src/product/entities/product.entity';
 import { ProductImage } from 'src/productimage/entities/productimage.entity';
 import { Shop } from 'src/shop/entities/shop.entity';
+import { ProductService } from 'src/product/product.service';
+import { CartItem } from 'src/cartitem/entities/cartitem.entity';
 
 @Injectable()
 export class CartService {
@@ -18,55 +20,100 @@ export class CartService {
     private cartRepository: Repository<Cart>,
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
+    @InjectRepository(CartItem)
+    private cartItemRepository: Repository<CartItem>,
     @InjectRepository(Product)
     private productRepository: Repository<Product>,
+    private productService: ProductService,
   ) {}
 
+  
   async addToCart(newItemCartDto: NewItemCart, customer : Customer) {
-    const foundOrder = await this.checkIfProductIsInCart(newItemCartDto.productId, customer);
-    if (foundOrder) {
-      this.orderRepository.update(foundOrder.id, {quantity: foundOrder.quantity + newItemCartDto.quantity});
-      return {statusCode: HttpStatus.BAD_REQUEST, message: 'Updated quantity in cart'};
-    }
     const { productId, quantity } = newItemCartDto;
     const product = await this.productRepository.findOne({where: {id:productId}, relations: ['shop']});
     const cart = await this.cartRepository.findOne({where: {customer: customer}});
+
+    const cartItem = await this.checkIfProductIsInCart(product, cart);
+
+    if (cartItem) {
+      this.cartItemRepository.update(cartItem.id, {
+        quantity: cartItem.quantity + quantity
+      });
+      return {statusCode: HttpStatus.BAD_REQUEST, message: 'Updated quantity in cart'};
+    }
+
+    this.cartItemRepository.save({
+      product,
+      cart,
+      quantity
+    });
     this.cartRepository.update(cart.id, {productCount: cart.productCount + 1});
     await this.cartRepository.save(cart);
-    const order = this.orderRepository.create({
-      quantity: quantity,
-      total: product.price * quantity,
-      status: 'incart',
-      product: product,
-      customer: customer,
-      shop: product.shop,
-      cart: cart
-    });
-    await this.orderRepository.save(order);
     return {statusCode: HttpStatus.OK, message: 'Item added to cart'};
   }
 
-  async checkIfProductIsInCart(productId: string, customer: Customer) {
-    const product = await this.productRepository.findOne({where: {id:productId}});
-    const cart = await this.cartRepository.findOne({where: {customer: customer}});
-    const order = await this.orderRepository.find({where: {cart}, relations: ['product', 'cart']});
-    const foundOrder = order.find(o => o.product.id === product.id);
-    return foundOrder;
+  async removeFromcart(cartItemId: string, customer: Customer) {
+    const cartItem = await this.cartItemRepository.findOne({where: {id: cartItemId}, relations: ['cart', 'cart.customer']});
+    if (cartItem.cart.customer.id !== customer.id) {
+      return {statusCode: HttpStatus.BAD_REQUEST, message: 'Unauthorized'};
+    }
+    this.cartItemRepository.delete(cartItemId);
+    return {statusCode: HttpStatus.OK, message: 'Item removed from cart'};
+  }
+
+  async checkIfProductIsInCart(product: Product, cart: Cart) {
+    const cartItem = await this.cartItemRepository
+    .createQueryBuilder('cartItem')
+    .select(['cartItem'])
+    .where('cartItem.product = :product', {product: product.id})
+    .andWhere('cartItem.cart = :cart', {cart: cart.id})
+    .getOne();
+    return cartItem;
   }
 
   async getCart(customer: Customer) {
-    const cart = await this.cartRepository
-      .createQueryBuilder('cart')
-      .select(['cart.id', 'cart.productCount', 'order.id', 'order.quantity', 'order.total', 'product.id', 'product.displayName', 'product.price', 'shop.nameId', 'shop.displayName', 'productImage.url'])
-      .innerJoin('cart.orders', 'order', 'order.cartId = cart.id')
-      .innerJoin('order.product', 'product', 'product.id = order.productId')
-      .innerJoin('order.shop', 'shop', 'shop.nameId = product.shopNameId')
-      .leftJoin('product.productImages', 'productImage')
-      .where('cart.customerId = :customerId', {customerId: customer.id})
-      .getOne();
-    if (!cart) {
-      return {statusCode: HttpStatus.NO_CONTENT, message: 'Cart is empty'};
+    const cartItems = await this.cartRepository
+    .createQueryBuilder('cart')
+    .select(['cart','cartItem', 'product', 'shop', 'productImage'])
+    .leftJoin('cart.cartItems', 'cartItem')
+    .leftJoin('cartItem.product', 'product')
+    .leftJoin('product.shop', 'shop')
+    .leftJoin('product.productImages', 'productImage')
+    .where('cart.customer = :customer', {customer: customer.id})
+    .orderBy('cartItem.createdAt', 'DESC')
+    .getOne();
+    if (!cartItems) {
+      return {statusCode: HttpStatus.NO_CONTENT, message: 'Cart is empty', productCount: 0};
     }
-    return cart;
+    return cartItems;
+  }
+
+  async checkout(customer: Customer) {
+    const cart = await this.cartRepository.findOne({where: {customer: customer}});
+    const cartItems = await this.cartItemRepository.find({where: {cart: cart}, relations: ['product', 'product.shop']});
+    
+    cartItems.forEach(async (cartItems) => {
+      const product = await this.productRepository.findOne({where: {id: cartItems.product.id}});
+      if (cartItems.quantity > product.stock) {
+        return {statusCode: HttpStatus.BAD_REQUEST, message: 'Quantity exceeds stock'};
+      }
+    })
+
+    cartItems.forEach(async (cartItem) => {
+      await this.productService.productOrdered(cartItem.product.id, cartItem.quantity);
+      this.orderRepository.save({
+        customer: customer,
+        status: "ordered",
+        total: cartItem.product.price * cartItem.quantity,
+        product: cartItem.product,
+        shop: cartItem.product.shop,
+        quantity: cartItem.quantity
+      });
+    });
+
+    // Delete all items in cart
+    await this.cartItemRepository.delete({cart: cart});
+
+    return {statusCode: HttpStatus.OK, message: 'Order placed'}
   }
 }

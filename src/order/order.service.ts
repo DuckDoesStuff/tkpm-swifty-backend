@@ -6,14 +6,19 @@ import { Order } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { Customer } from 'src/customer/entities/customer.entity';
 import { stat } from 'fs';
+import { Merchant } from 'src/merchant/entities/merchant.entity';
+import { Shop } from 'src/shop/entities/shop.entity';
+import { Product } from 'src/product/entities/product.entity';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
-    @InjectRepository(Customer)
-    private customerRepository: Repository<Customer>,
+    @InjectRepository(Product)
+    private productRepository: Repository<Product>,
+    @InjectRepository(Shop)
+    private shopRepository: Repository<Shop>,
   ) {}
 
   async deleteOrder(id: string, customer: Customer) {
@@ -32,6 +37,7 @@ export class OrderService {
         relations: ['product', 'customer', 'shop'],
         take: limit,
         skip: offset,
+        order: {createdAt: 'DESC'}
       });
 
     if (!orders) {
@@ -59,5 +65,43 @@ export class OrderService {
       return {statusCode: HttpStatus.NOT_FOUND, message: 'Order not found'};
     }
     return {statusCode: HttpStatus.OK, order};
+  }
+
+  async findAll(customer: Customer, status: string, limit: number, offset: number, orderby: string) {
+    const [orders, total] = await this.orderRepository.findAndCount({
+        where: {customer, status}, 
+        relations: ['product', 'shop', 'product.productImages'],
+        take: limit,
+        skip: offset,
+      });
+
+    if (!orders) {
+      return {statusCode: HttpStatus.NOT_FOUND, message: 'No orders found'};
+    }
+    return {statusCode: HttpStatus.OK, orders, total, totalPages: Math.ceil(total / limit)};
+  }
+
+  async update(id: string, shopNameId: string, updateOrderDto: UpdateOrderDto, merchant: Merchant, customer : Customer) {
+    const order = await this.orderRepository.findOne({where: {id}, relations: ['product', 'shop', 'shop.merchant', 'customer']});
+    if(order.shop.nameId !== shopNameId) {
+      return {statusCode: HttpStatus.FORBIDDEN, message: 'Order not from this shop'};
+    }
+
+    if (order.status === 'shipping' && updateOrderDto.status == 'canceled') {
+      return {statusCode: HttpStatus.FORBIDDEN, message: 'Cannot cancel, order already shipping'};
+    }
+    
+    if (order.status === 'completed') {
+      return {statusCode: HttpStatus.FORBIDDEN, message: 'Cannot update completed order'};
+    }
+    
+    if (updateOrderDto.status === 'completed') {
+      await this.productRepository.update(order.product.id, 
+        {sold: order.product.sold + order.quantity, stock: order.product.stock - order.quantity});
+      await this.shopRepository.update(order.shop.nameId, {sold: order.shop.sold + order.quantity, revenue: order.shop.revenue + order.total});
+    }
+
+    return this.orderRepository.update(id, updateOrderDto);
+
   }
 }

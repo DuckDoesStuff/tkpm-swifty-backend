@@ -77,6 +77,11 @@ export class CustomerController {
     }
   }
 
+  @Get(':email')
+  findOne(@Param('email') email: string) {
+    return this.customerService.findOneByEmail(email);
+  }
+
   // @Delete(':id')
   // remove(@Param('id') id: string) {
   //   return this.customerService.remove(+id);

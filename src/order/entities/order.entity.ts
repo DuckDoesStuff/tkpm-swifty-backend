@@ -19,9 +19,6 @@ export class Order {
 	@Column()
 	total: number;
 
-	@ManyToOne(type => Cart, cart => cart.orders)
-	cart: Cart;
-
 	@ManyToOne(type => Product, product => product.id)
 	product: Product;
 

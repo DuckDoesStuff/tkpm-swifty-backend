@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Query } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { NewItemCart } from './dto/new-item-cart.dt';
 import { Request } from 'express';
@@ -15,5 +15,15 @@ export class CartController {
   @Get()
   getAllItem(@Req() req: Request){
     return this.cartService.getCart(req.customer);
+  }
+
+  @Post('checkout')
+  checkout(@Req() req: Request){
+    return this.cartService.checkout(req.customer);
+  }
+
+  @Delete(':id')
+  removeFromCart(@Param('id') id: string, @Req() req: Request) {
+    return this.cartService.removeFromcart(id, req.customer);
   }
 }

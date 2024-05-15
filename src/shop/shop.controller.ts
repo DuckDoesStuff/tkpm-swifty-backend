@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, HttpStatus, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Req, HttpStatus, HttpException, Query } from '@nestjs/common';
 import { ShopService } from './shop.service';
 import { CreateShopDto } from './dto/create-shop.dto';
 import { UpdateShopDto } from './dto/update-shop.dto';
@@ -34,9 +34,9 @@ export class ShopController {
   }
 
   @Get(':nameId')
-  findOne(@Param('nameId') nameId: string) {
+  findOne(@Param('nameId') nameId: string, @Query('loadProduct') loadProduct: string) {
     try {
-      return this.shopService.findOne(nameId);
+      return this.shopService.findOne(nameId, loadProduct);
     } catch(error) {
       console.error(error);
       throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -47,9 +47,4 @@ export class ShopController {
   update(@Param('nameId') nameId: string, @Body() updateShopDto: UpdateShopDto) {
     return this.shopService.updateShop(nameId, updateShopDto);
   }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.shopService.removeShop(+id);
-  // }
 }

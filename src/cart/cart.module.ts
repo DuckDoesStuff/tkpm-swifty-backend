@@ -17,10 +17,11 @@ import { ProductService } from 'src/product/product.service';
 import { ShopService } from 'src/shop/shop.service';
 import { Shop } from 'src/shop/entities/shop.entity';
 import { ProductImage } from 'src/productimage/entities/productimage.entity';
+import { CartItem } from 'src/cartitem/entities/cartitem.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Session, Customer, Merchant, Cart, Order, Product, Shop, ProductImage]),
+    TypeOrmModule.forFeature([Session, Customer, Merchant, Cart, CartItem, Order, Product, Shop, ProductImage]),
   ],
   controllers: [CartController],
   providers: [CartService, SessionService, CustomerService, MerchantService, OrderService, ProductService, ShopService, ProductImage],

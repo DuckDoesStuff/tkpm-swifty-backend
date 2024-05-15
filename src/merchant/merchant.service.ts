@@ -33,8 +33,12 @@ export class MerchantService {
     return this.merchantRepository.findOne({where: {nameId: id}, relations: ['shops']});
   }
 
-  findOneByEmail(email: string) {
-    return this.merchantRepository.findOne({where: {email}});
+  async findOneByEmail(email: string) {
+    const merchant = await this.merchantRepository.findOne({where: {email}});
+    if(!merchant) {
+      throw new HttpException('Merchant not found', HttpStatus.NOT_FOUND);
+    }
+    return merchant;
   };
 
   async updateMerchant(id: number, updateMerchantDto: UpdateMerchantDto) {

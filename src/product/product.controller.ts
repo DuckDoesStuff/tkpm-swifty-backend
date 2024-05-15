@@ -28,13 +28,23 @@ export class ProductController {
     }
   }
 
+  @Delete("/thumbnail/:id")
+  deleteThumbnail(@Param('id') id: string) {
+    try {
+      return this.productService.deleteProductThumbnail(id);
+    } catch (error) {
+      console.error(error);
+      throw new Error('Failed to update thumbnail');
+    }
+  }
+
   @Get()
-  getAll(@Query('shop') shopNameId: string, @Query('limit') limit: string, @Query('offset') offset: string, @Query('loadImg') loadImg: string) {
+  getAll(@Query('shop') shopNameId: string, @Query('orderby') orderby: string, @Query('limit') limit: string, @Query('offset') offset: string, @Query('loadImg') loadImg: string) {
     const limitInt = limit ? parseInt(limit, 10) : 10;
     const offsetInt = offset ? parseInt(offset, 10) : 0;
     const loadImgBool = loadImg === 'true';
     
-    return this.productService.findAll(limitInt, offsetInt, loadImgBool, shopNameId);
+    return this.productService.findAll(orderby, limitInt, offsetInt, loadImgBool, shopNameId);
   }
 
   @Get(':id')

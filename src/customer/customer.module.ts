@@ -22,13 +22,6 @@ import { Cart } from 'src/cart/entities/cart.entity';
 export class CustomerModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-    .apply((req, res, next) => {
-      console.log(req.body)
-      next();
-    })
-    .forRoutes(CustomerController);
-
-    consumer
     .apply(CustomerAuthMiddleware)
     .forRoutes(
       { path: 'customer', method: RequestMethod.PATCH },

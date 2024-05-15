@@ -10,7 +10,6 @@ import { ShopModule } from './shop/shop.module';
 import { SessionModule } from './session/session.module';
 import { ProductimageModule } from './productimage/productimage.module';
 import { OrderModule } from './order/order.module';
-import { InvoiceModule } from './invoice/invoice.module';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { InvoiceModule } from './invoice/invoice.module';
     SessionModule,
     ProductimageModule,
     OrderModule,
-    InvoiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

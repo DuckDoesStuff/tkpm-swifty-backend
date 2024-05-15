@@ -43,7 +43,7 @@ export class ProductService {
   }
 
 
-  async findAll(limit: number, offset: number, loadImg: boolean, shopNameId: string) {
+  async findAll(orderby: string, limit: number, offset: number, loadImg: boolean, shopNameId: string) {
     const [products, total] = loadImg
       ? await this.productRepository.findAndCount({
           where: { shop: { nameId: shopNameId } },
@@ -82,6 +82,15 @@ export class ProductService {
     return {statusCode: 200, message: 'Thumbnail created'};
   }
 
+  async deleteProductThumbnail(id: string) {
+    const product = await this.productRepository.findOne({where: {id}, relations: ['productImages']});
+    if (!product) {
+      throw new Error('Product does not exist');
+    }
+    await this.productImageRepository.delete({product: product});
+    return {statusCode: 200, message: 'Thumbnail deleted'};
+  }
+
 
   findOneWithId(id: string) {
     return this.productRepository.findOne({where: {id}, relations: ['productImages', 'shop']});
@@ -97,5 +106,24 @@ export class ProductService {
 
   updateProduct(id: string, updateProductDto: UpdateProductDto) {
     return this.productRepository.update({id}, updateProductDto);
+  }
+
+  async productOrdered(productId: string, quantity: number) {
+    try {
+
+      const product = await this.productRepository.findOne({where: {id: productId}});
+      
+      if (!product) {
+        throw new HttpErrorByCode[HttpStatus.NOT_FOUND]('Product does not exist');
+      }
+      
+      if (product.stock < quantity) {
+        throw new HttpErrorByCode[HttpStatus.BAD_REQUEST]('Product out of stock');
+      }
+      
+      return this.productRepository.update({id: productId}, {stock: product.stock - quantity});
+    } catch(error) {
+      throw new Error('Failed to update product stock');
+    }
   }
 }

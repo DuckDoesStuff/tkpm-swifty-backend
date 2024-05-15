@@ -38,7 +38,10 @@ export class ShopService {
     return this.shopRepository.find();
   }
 
-  async findOne(nameId: string) {
+  async findOne(nameId: string, loadProduct: string) {
+    if (loadProduct === 'false') {
+      return await this.shopRepository.findOne({where: {nameId}, relations: ['merchant']});
+    }
     const shop = await this.shopRepository.findOne({where: {nameId}, relations: ['merchant', 'products']});
   
     if (!shop) {

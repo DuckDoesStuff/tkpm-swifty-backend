@@ -11,6 +11,8 @@ import { SessionModule } from './session/session.module';
 import { ProductimageModule } from './productimage/productimage.module';
 import { OrderModule } from './order/order.module';
 
+require('dotenv').config();
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
